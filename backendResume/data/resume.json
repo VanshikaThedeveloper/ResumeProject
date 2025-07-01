@@ -1,0 +1,214 @@
+{
+  "resumeData": {
+    "name": "ADITYA TIWARY",
+    "role": "Medical Doctor",
+    "phone": "+1-918-768-6057",
+    "email": "dradityatiwary@gmail.com",
+    "linkedin": "https://www.linkedin.com/in/dr-aditya-tiwary/",
+    "location": "Chicago, IL",
+    "summary": "Board-certified Medical Doctor with 8 years of clinical practice specializing in Internal Medicine. Managed a diverse patient population, conducting over 5,000 patient consultations annually. Skilled in diagnosis, treatment planning, and patient education. Committed to providing evidence-based care with a compassionate approach. Seeking to leverage my clinical expertise at Chicago Memorial Hospital.",
+    "experience": [
+      {
+        "title": "Attending Physician",
+        "companyName": "Northwestern Memorial Hospital",
+        "date": "2018 - 2022",
+        "companyLocation": "Chicago, IL",
+        "accomplishment": "• Led a team of 5 residents and 3 medical students in a busy internal medicine department\n• Diagnosed and treated 30+ patients daily with various acute and chronic conditions\n• Performed 200+ medical procedures including lumbar punctures and central line placements\n• Reduced hospital readmission rates by 15% through comprehensive discharge planning\n• Published 3 research papers in peer-reviewed medical journals on chronic disease management"
+      },
+      {
+        "title": "Resident Physician",
+        "companyName": "University of Chicago Medical Center",
+        "date": "2016 - 2018",
+        "companyLocation": "Chicago, IL",
+        "accomplishment": "• Completed comprehensive training in internal medicine treating 1000+ patients annually\n• Conducted daily rounds for 15-20 patients, formulating treatment plans and follow-up care\n• Participated in 150+ emergency room consultations and admissions\n• Achieved 95% patient satisfaction scores based on hospital surveys\n• Presented 5 case studies at departmental conferences on complex medical conditions"
+      },
+      {
+        "title": "Medical Intern",
+        "companyName": "Rush University Medical Center",
+        "date": "2014 - 2016",
+        "companyLocation": "Chicago, IL",
+        "accomplishment": "• Rotated through various specialties including cardiology, pulmonology, and gastroenterology\n• Assisted attending physicians in diagnosing and treating 500+ patients\n• Participated in 75+ medical procedures under direct supervision\n• Completed electronic medical record documentation for 20+ patients daily\n• Received Excellence in Patient Care award for exceptional bedside manner"
+      }
+    ],
+    "education": [
+      {
+        "degree": "Doctor of Medicine (MD)",
+        "institution": "University of Illinois College of Medicine",
+        "duration": "08/2010 - 05/2014",
+        "location": "Chicago, IL"
+      },
+      {
+        "degree": "Bachelor of Science in Biology",
+        "institution": "Northwestern University",
+        "duration": "09/2006 - 05/2010",
+        "location": "Evanston, IL"
+      }
+    ],
+    "philosophy": {
+      "quote": "The good physician treats the disease; the great physician treats the patient who has the disease.",
+      "author": "— William Osler"
+    },
+    "expertise": [
+      {
+        "skill": "Clinical Diagnosis",
+        "value": 0.9
+      },
+      {
+        "skill": "Patient Communication",
+        "value": 0.8
+      },
+      {
+        "skill": "Medical Procedures",
+        "value": 0.8
+      },
+      {
+        "skill": "Evidence-based Medicine",
+        "value": 0.9
+      }
+    ],
+    "strengths": [
+      {
+        "title": "Clinical Reasoning",
+        "description": "Able to analyze complex symptoms and medical histories to arrive at accurate diagnoses."
+      },
+      {
+        "title": "Crisis Management",
+        "description": "Maintain composure and sound decision-making under high-pressure emergency situations."
+      },
+      {
+        "title": "Empathetic Communication",
+        "description": "Skilled at explaining complex medical concepts to patients in an understandable and compassionate way."
+      }
+    ],
+    "achievements": [
+      {
+        "title": "Research Publication",
+        "description": "Lead author on a study published in the New England Journal of Medicine on innovative approaches to chronic disease management, 2020."
+      }
+    ],
+    "languages": [
+      {
+        "name": "English",
+        "level": "Native",
+        "dots": 5
+      },
+      {
+        "name": "Spanish",
+        "level": "Advanced",
+        "dots": 4
+      }
+    ],
+    "skills": [
+      {
+        "category": "Clinical Diagnosis",
+        "items": [
+          "Clinical Diagnosis"
+        ]
+      },
+      {
+        "category": "Medical Procedures",
+        "items": [
+          "Medical Procedures"
+        ]
+      },
+      {
+        "category": "Patient Education",
+        "items": [
+          "Patient Education"
+        ]
+      },
+      {
+        "category": "Electronic Medical Records",
+        "items": [
+          "Electronic Medical Records"
+        ]
+      },
+      {
+        "category": "Critical Care",
+        "items": [
+          "Critical Care"
+        ]
+      },
+      {
+        "category": "ACLS",
+        "items": [
+          "ACLS"
+        ]
+      },
+      {
+        "category": "Research",
+        "items": [
+          "Research"
+        ]
+      },
+      {
+        "category": "Chronic Disease Management",
+        "items": [
+          "Chronic Disease Management"
+        ]
+      },
+      {
+        "category": "Emergency Medicine",
+        "items": [
+          "Emergency Medicine"
+        ]
+      }
+    ],
+    "references": [
+      {
+        "name": "Dr. Sarah Williams",
+        "title": "Chief of Medicine, Northwestern Memorial Hospital",
+        "contact": "+1-312-468-7235"
+      }
+    ]
+  },
+  "sectionSettings": {
+    "header": {
+      "showTitle": true,
+      "showPhone": true,
+      "showLink": true,
+      "showEmail": true,
+      "showLocation": true,
+      "uppercaseName": true,
+      "showPhoto": false
+    },
+    "summary": {
+      "showSummary": true
+    },
+    "experience": {
+      "showExperience": true
+    },
+    "education": {
+      "showEducation": true
+    },
+    "achievements": {
+      "showAchievements": true
+    },
+    "languages": {
+      "showLanguages": true
+    },
+    "skills": {
+      "showSkills": true
+    },
+    "philosophy": {
+      "showPhilosophy": true
+    },
+    "expertise": {
+      "showExpertise": true
+    },
+    "strengths": {
+      "showStrengths": true
+    },
+    "references": {
+      "showReferences": true
+    }
+  },
+  "branding": true,
+  "sectionsOrder": [
+    "summary",
+    "experience",
+    "education",
+    "philosophy",
+    "expertise"
+  ]
+}
