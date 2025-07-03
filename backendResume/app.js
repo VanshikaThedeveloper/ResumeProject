@@ -4,8 +4,9 @@ const cors = require('cors');
 const bodyParser = require("body-parser");
 require("dotenv").config();
 
-const { mongoConnect } = require('./utils/mongodb');
+// const { mongoConnect } = require('./utils/mongodb');
 const resumeRoutes = require('./routes/resumeRoutes');
+const mongoose = require("mongoose");
 
 
 
@@ -110,13 +111,34 @@ app.get("/load", async (req, res) => {
 // });
 
 
+// mongoose
+//   .connect("mongodb://localhost:27017/resumeDB", {
+//     useNewUrlParser: true,
+//     useUnifiedTopology: true,
+//   })
+//   .then(() => console.log("✅ Mongoose connected to MongoDB"))
+//   .catch((err) => console.error("❌ MongoDB connection error:", err));
 
 
+// const PORT = process.env.PORT || 4000;
+// mongoConnect(() => {
+//   console.log("Connected to MongoDB");
+//   app.listen(PORT, () => {
+//     console.log(`Server running at http://localhost:${PORT}`);
+//   });
+// });
 
-const PORT = process.env.PORT || 4000;
-mongoConnect(() => {
-  console.log("Connected to MongoDB");
-  app.listen(PORT, () => {
-    console.log(`Server running at http://localhost:${PORT}`);
+mongoose
+  .connect(process.env.MONGO_URI)
+  .then(() => {
+    console.log("✅ Connected to MongoDB Atlas");
+    const PORT = process.env.PORT || 4000;
+    app.listen(PORT, () => {
+      console.log(`🚀 Server running at http://localhost:${PORT}`);
+    });
+  })
+  .catch((err) => {
+    console.error("❌ MongoDB Atlas connection error:", err.message);
   });
-});
+
+

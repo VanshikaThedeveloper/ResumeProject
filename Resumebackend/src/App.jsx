@@ -132,6 +132,7 @@ const Sidebar = React.memo(
 );
 
 const ResumeEditor = () => {
+  
   const [resumeData, setResumeData] = useState({
     name: "ADITYA TIWARY",
     role: "Medical Doctor",
@@ -367,6 +368,7 @@ const [showUploadButton, setUploadButton] = useState(false);
     strengths: { showStrengths: true },
     references: { showReferences: true },
   });
+  console.log("Section Settings", sectionSettings);
 
   const [activeSection, setActiveSection] = useState(null);
   const [sectionsOrder, setSectionsOrder] = useState([
@@ -497,6 +499,35 @@ const handleColorPicker = useCallback(() => {
 }, []);
 
 
+// const handleSaveResume = useCallback(async () => {
+//   try {
+//     const dataToSave = {
+//       resumeData,
+//       sectionSettings,
+//       branding,
+//       sectionsOrder,
+//     };
+
+   
+//     const response = await axios.post(
+//       "http://localhost:4000/save",
+//       dataToSave,
+//       { headers: { "Content-Type": "application/json" } }   
+//     );
+
+//     setShowSaveNotification(true);                 
+//     setTimeout(() => setShowSaveNotification(false), 3000);
+   
+//   } catch (error) {
+//     alert("Failed to save resume.");
+//     console.error("Error saving resume:", error.message);
+//     console.log("Full error response:", error?.response?.data);
+//   }
+// }, [resumeData, sectionSettings, branding, sectionsOrder]); 
+
+
+
+
 const handleSaveResume = useCallback(async () => {
   try {
     const dataToSave = {
@@ -506,73 +537,72 @@ const handleSaveResume = useCallback(async () => {
       sectionsOrder,
     };
 
-   
     const response = await axios.post(
       "http://localhost:4000/save",
       dataToSave,
-      { headers: { "Content-Type": "application/json" } }   
+      { headers: { "Content-Type": "application/json" } }
     );
 
-    setShowSaveNotification(true);                 
+    setShowSaveNotification(true);
     setTimeout(() => setShowSaveNotification(false), 3000);
-   
   } catch (error) {
     alert("Failed to save resume.");
     console.error("Error saving resume:", error.message);
     console.log("Full error response:", error?.response?.data);
   }
-}, [resumeData, sectionSettings, branding, sectionsOrder]); 
+}, [resumeData, sectionSettings, branding, sectionsOrder]);
 
 
 
 
+// useEffect(() => {
+//   const loadSavedResume = async () => {
+//     try {
+//       const response = await axios.get("http://localhost:4000/load");
+//       const savedData = response.data;
 
-useEffect(() => {
-  const loadSavedResume = async () => {
-    try {
-      const response = await axios.get("http://localhost:4000/load");
-      const savedData = response.data;
+//       // Set the state from saved data
+//       setResumeData(savedData.resumeData || {});
+//       setSectionSettings(savedData.sectionSettings || {});
+//       setBranding(savedData.branding || {});
+//       setSectionsOrder(savedData.sectionsOrder || []);
+//     } catch (error) {
+//       if (error.response && error.response.status === 404) {
+//         console.log("No saved resume found yet.");
+//       } else {
+//         console.error("Failed to load resume:", error.message);
+//       }
+//     }
+//   };
 
-      // Set the state from saved data
-      setResumeData(savedData.resumeData || {});
-      setSectionSettings(savedData.sectionSettings || {});
-      setBranding(savedData.branding || {});
-      setSectionsOrder(savedData.sectionsOrder || []);
-    } catch (error) {
-      if (error.response && error.response.status === 404) {
-        console.log("No saved resume found yet.");
-      } else {
-        console.error("Failed to load resume:", error.message);
-      }
-    }
-  };
-
-  loadSavedResume(); // Call when component mounts
-}, []);
-
+//   loadSavedResume(); // Call when component mounts
+// }, []);
 
 
+
+
+// 
 
 
 
   
 
-  // useEffect(() => {
-  //   const savedResume = localStorage.getItem("resumeData");
-  //   if (savedResume) setResumeData(JSON.parse(savedResume));
+  useEffect(() => {
+    const savedResume = localStorage.getItem("resumeData");
+    if (savedResume) setResumeData(JSON.parse(savedResume));
 
-  //   const savedSettings = localStorage.getItem("sectionSettings");
-  //   if (savedSettings) setSectionSettings(JSON.parse(savedSettings));
+    const savedSettings = localStorage.getItem("sectionSettings");
+    if (savedSettings) setSectionSettings(JSON.parse(savedSettings));
 
-  //   const savedBranding = localStorage.getItem("branding");
-  //   if (savedBranding) setBranding(JSON.parse(savedBranding));
-  // }, []);
+    const savedBranding = localStorage.getItem("branding");
+    if (savedBranding) setBranding(JSON.parse(savedBranding));
+  }, []);
 
-  // useEffect(() => {
-  //   localStorage.setItem("resumeData", JSON.stringify(resumeData));
-  //   localStorage.setItem("sectionSettings", JSON.stringify(sectionSettings));
-  //   localStorage.setItem("branding", JSON.stringify(branding));
-  // }, [resumeData, sectionSettings, branding]);
+  useEffect(() => {
+    localStorage.setItem("resumeData", JSON.stringify(resumeData));
+    localStorage.setItem("sectionSettings", JSON.stringify(sectionSettings));
+    localStorage.setItem("branding", JSON.stringify(branding));
+  }, [resumeData, sectionSettings, branding]);
 
 
 
@@ -1140,6 +1170,7 @@ useEffect(() => {
   }, []);
 
   return (
+    
     <div className="flex flex-col lg:flex-row min-h-screen bg-gray-100">
       <Sidebar
         setActiveSection={setActiveSection}
@@ -2357,7 +2388,6 @@ useEffect(() => {
 
 
     </div>
-
 
 
 

@@ -5,10 +5,28 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
-const saveControl = require('../controllers/saveControl');
-const loadControl = require('../controllers/loadControl');
-const enhanceControl = require('../controllers/enhanceControl');
-const uploadControl = require('../controllers/uploadControl');
+// const {controller} = require('../controllers/template13controller')
+const {
+  saveResume,
+  loadResume,
+  enhanceResume,
+  uploadResume
+} = require('../controllers/template13controller.js');
+
+
+
+// const storage = multer.diskStorage({
+//   destination: (req, file, cb) => {
+//     const uploadDir = path.join("uploads");
+//     if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir);
+//     cb(null, uploadDir);
+//   },
+//   filename: (req, file, cb) => {
+//     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+//     cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+//   }
+// });
+// const upload = multer({ storage });
 
 
 const storage = multer.diskStorage({
@@ -22,11 +40,12 @@ const storage = multer.diskStorage({
     cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
   }
 });
-const upload = multer({ storage });
+ const upload = multer({ storage });
 
-router.post('/save', saveControl.saveResume);
-router.get('/load', loadControl.loadResume);
-router.post('/enhance', enhanceControl.enhanceResume);
-router.post('/upload-resume', upload.single("resumeFile"), uploadControl.uploadResume);
+
+router.post('/save', saveResume);
+router.get('/load', loadResume);
+router.post('/enhance', enhanceResume);
+router.post('/upload-resume', upload.single("resumeFile"), uploadResume);
 
 module.exports = router;
