@@ -7,6 +7,7 @@ import React, {
 } from "react";
 import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
+// import { Download, Upload, Share, Settings, Edit, Plus, Save, Trash2, Bot, ArrowUp, ArrowDown, Mail } from "lucide-react";
 import { motion } from "framer-motion";
 const API_BASE = "http://localhost:4000";
 
@@ -414,6 +415,25 @@ const [showUploadButton, setUploadButton] = useState(false);
 
 
 
+// const saveResumeToBackend = useCallback(async () => {
+//   const dataToSave = {
+//     resumeData,
+//     sectionSettings,
+//     branding,
+//     sectionsOrder
+//   };
+
+//   try {
+//     await axios.post("http://localhost:4000/save", dataToSave);
+//     console.log("✅ Resume auto-saved before enhancement");
+//   } catch (err) {
+//     console.error("❌ Failed to auto-save before enhancement:", err.message);
+//     throw err;
+//   }
+// }, [resumeData, sectionSettings, branding, sectionsOrder]);
+
+
+
 const saveResumeToBackend = useCallback(async () => {
   const dataToSave = {
     resumeData,
@@ -423,8 +443,17 @@ const saveResumeToBackend = useCallback(async () => {
   };
 
   try {
-    await axios.post("http://localhost:4000/save", dataToSave);
-    console.log("✅ Resume auto-saved before enhancement");
+    const res = await axios.post("http://localhost:4000/save", dataToSave);
+
+    // ✅ Set _id from backend response
+    if (res.data?.data?._id) {
+      setResumeData(prev => ({
+        ...prev,
+        _id: res.data.data._id
+      }));
+    }
+
+    console.log("✅ Resume saved with _id:", res.data.data?._id);
   } catch (err) {
     console.error("❌ Failed to auto-save before enhancement:", err.message);
     throw err;
@@ -433,51 +462,120 @@ const saveResumeToBackend = useCallback(async () => {
 
 
 
+//  const saveResumeToBackend = async () => {
+//     try {
+//       const response = await axios.post("http://localhost:4000/save", { resumeData: editableContent });
+//       if (response.data?.data?._id) {
+//         setResumeData(prev => ({ ...prev, _id: response.data.data._id }));
+//         alert("Resume saved successfully!");
+//       }
+//     } catch (error) {
+//       console.error("Error saving resume:", error);
+//       alert("Failed to save resume.");
+//     }
+//   };
 
 
-const handleEnhanceSection = useCallback(
-  async (section) => {
-    setShowAIMenu(false);                       // 1. close menu immediately
-    try {
-      await saveResumeToBackend();              // ✅ 2. AUTO-SAVE
-      const rawContent = resumeData[section];   // 3. get latest data
 
-      const content =
-        typeof rawContent === "string"
-          ? rawContent
-          : JSON.stringify(rawContent, null, 2);
 
-      const { data } = await axios.post(`${API_BASE}/enhance`, {
-        type: section,
-        content,
-      });
 
-      const improved = data.enhanced;
+// const handleEnhanceSection = useCallback(
+//   async (section) => {
+//     setShowAIMenu(false);                       // 1. close menu immediately
+//     try {
+//       await saveResumeToBackend();              // ✅ 2. AUTO-SAVE
+//       const rawContent = resumeData[section];   // 3. get latest data
 
-      // 4. apply enhanced content back to state
-      if (typeof rawContent === "string") {
-       setResumeData((prev) => ({ ...prev, [section]: improved }));
-      } else {
-        setResumeData((prev) => {
-          const updated = [...prev[section]];
-          if (updated[0]) {
-            if (section === "experience") updated[0].accomplishment = improved;
-            else if (section === "education") updated[0].degree = improved;
-            else if (section === "achievements") updated[0].description = improved;
-            else if (section === "strengths") updated[0].description = improved;
-          }
-          return { ...prev, [section]: updated };
-        });
-      }
-    } catch (err) {
-      console.error("AI Enhance Error:", err?.response?.data || err.message);
-      setShowAIErrorPopup(true);
-      setTimeout(() => setShowAIErrorPopup(false), 3000);
-    }
-  },
-  [resumeData, sectionSettings, branding, sectionsOrder, API_BASE]
-);
+//       const content =
+//         typeof rawContent === "string"
+//           ? rawContent
+//           : JSON.stringify(rawContent, null, 2);
+
+//       const { data } = await axios.post(`${API_BASE}/enhance`, {
+//         type: section,
+//         content,
+//       });
+
+//       const improved = data.enhanced;
+
+//       // 4. apply enhanced content back to state
+//       if (typeof rawContent === "string") {
+//        setResumeData((prev) => ({ ...prev, [section]: improved }));
+//       } else {
+//         setResumeData((prev) => {
+//           const updated = [...prev[section]];
+//           if (updated[0]) {
+//             if (section === "experience") updated[0].accomplishment = improved;
+//             else if (section === "education") updated[0].degree = improved;
+//             else if (section === "achievements") updated[0].description = improved;
+//             else if (section === "strengths") updated[0].description = improved;
+//           }
+//           return { ...prev, [section]: updated };
+//         });
+//       }
+//     } catch (err) {
+//       console.error("AI Enhance Error:", err?.response?.data || err.message);
+//       setShowAIErrorPopup(true);
+//       setTimeout(() => setShowAIErrorPopup(false), 3000);
+//     }
+//   },
+//   [resumeData, sectionSettings, branding, sectionsOrder, API_BASE]
+// );
   
+const handleEnhanceSection = async (field) => {
+   
+    try {
+      const response = await axios.post('http://localhost:4000/enhanceField', {
+        resumeId: resumeData._id,
+        field,
+      });
+       if (response.data?.data?.resumeData) {
+      setResumeData(response.data.data.resumeData); // Update resume state
+      alert(`${field} enhanced successfully!`);
+    } else {
+      alert("Enhanced data not returned.");
+    }
+    } catch (error) {
+      if (error.response) {
+    console.error("Server Error:", error.response.data);
+  } else if (error.request) {
+    console.error("No Response:", error.request);
+  } else {
+    console.error("Error", error.message);
+  }
+  alert(`Failed to enhance ${field}.`);
+} finally {
+  // Close menu after enhancing
+  
+}
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -724,79 +822,146 @@ const handleSaveResume = useCallback(async () => {
 
 
 
-  const handleDownload = useCallback(async () => {
-  setShowButtons(false);
-  setActiveSection(null);
-  setIsDownloading(true);
 
-  try {
-    const element = resumeRef.current;
-    if (!element) throw new Error("Resume element not found");
 
-    await new Promise(r => setTimeout(r, 400));
 
-    // ✅ Remove unsupported color formats like oklch using regex
-    const sanitizeColors = (el) => {
-      const style = window.getComputedStyle(el);
-      const inline = el.style;
-      for (const prop of ['color', 'backgroundColor', 'borderColor', 'boxShadow']) {
-        const value = style[prop];
-        if (value && /oklch\(/i.test(value)) {
-          inline.setProperty(prop, '#000');
-        }
-      }
-    };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//   const handleDownload = useCallback(async () => {
+//   setShowButtons(false);
+//   setActiveSection(null);
+//   setIsDownloading(true);
+
+//   try {
+//     const element = resumeRef.current;
+//     if (!element) throw new Error("Resume element not found");
+
+//     await new Promise(r => setTimeout(r, 400));
+
+//     // ✅ Remove unsupported color formats like oklch using regex
+//     const sanitizeColors = (el) => {
+//       const style = window.getComputedStyle(el);
+//       const inline = el.style;
+//       for (const prop of ['color', 'backgroundColor', 'borderColor', 'boxShadow']) {
+//         const value = style[prop];
+//         if (value && /oklch\(/i.test(value)) {
+//           inline.setProperty(prop, '#000');
+//         }
+//       }
+//     };
     
-    // Traverse deeply into shadow DOMs if needed
-    const walkAndSanitize = (root) => {
-      const stack = [root];
-      while (stack.length > 0) {
-        const node = stack.pop();
-        if (!(node instanceof HTMLElement)) continue;
-        sanitizeColors(node);
-        for (const child of node.children) {
-          stack.push(child);
+//     // Traverse deeply into shadow DOMs if needed
+//     const walkAndSanitize = (root) => {
+//       const stack = [root];
+//       while (stack.length > 0) {
+//         const node = stack.pop();
+//         if (!(node instanceof HTMLElement)) continue;
+//         sanitizeColors(node);
+//         for (const child of node.children) {
+//           stack.push(child);
+//         }
+//       }
+//     };
+
+//     walkAndSanitize(element);
+
+//     const canvas = await html2canvas(element, {
+//       scale: 2,
+//       useCORS: true,
+//       allowTaint: true,
+//       logging: false,
+//       scrollX: 0,
+//       scrollY: 0,
+//     });
+
+//     const imgData = canvas.toDataURL("image/png");
+//     const pdf = new jsPDF("p", "pt", "a4");
+//     const pageW = pdf.internal.pageSize.getWidth();
+//     const pageH = pdf.internal.pageSize.getHeight();
+//     let imgH = (canvas.height * pageW) / canvas.width;
+//     let position = 0;
+
+//     if (imgH <= pageH) {
+//       pdf.addImage(imgData, "PNG", 0, 0, pageW, imgH);
+//     } else {
+//       while (position < imgH) {
+//         pdf.addImage(imgData, "PNG", 0, position, pageW, imgH);
+//         position -= pageH;
+//         if (position < imgH) pdf.addPage();
+//       }
+//     }
+
+//     pdf.save("resume.pdf");
+//   } catch (err) {
+//     console.error("Download error:", err);
+//     alert("Failed to generate PDF. Please try again.");
+//   } finally {
+//     setShowButtons(true);
+//     setIsDownloading(false);
+//   }
+// }, []);
+
+
+
+
+
+
+
+
+
+const handleDownload = async () => {
+    try {
+      setShowButtons(false);
+     setIsDownloading(true);
+      const response = await axios.post(
+        "http://localhost:4000/generate-pdf",
+        { resumeData: resumeData },
+        {
+          responseType: "blob",
+          headers: { "Content-Type": "application/json" }
         }
+      );
+
+      if (!response || !response.data || !(response.data instanceof Blob)) {
+        throw new Error("Invalid PDF response");
       }
-    };
 
-    walkAndSanitize(element);
+      const url = window.URL.createObjectURL(response.data);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `resume_${Date.now()}.pdf`);
+      document.body.appendChild(link);
+      link.click();
 
-    const canvas = await html2canvas(element, {
-      scale: 2,
-      useCORS: true,
-      allowTaint: true,
-      logging: false,
-      scrollX: 0,
-      scrollY: 0,
-    });
-
-    const imgData = canvas.toDataURL("image/png");
-    const pdf = new jsPDF("p", "pt", "a4");
-    const pageW = pdf.internal.pageSize.getWidth();
-    const pageH = pdf.internal.pageSize.getHeight();
-    let imgH = (canvas.height * pageW) / canvas.width;
-    let position = 0;
-
-    if (imgH <= pageH) {
-      pdf.addImage(imgData, "PNG", 0, 0, pageW, imgH);
-    } else {
-      while (position < imgH) {
-        pdf.addImage(imgData, "PNG", 0, position, pageW, imgH);
-        position -= pageH;
-        if (position < imgH) pdf.addPage();
-      }
+      setTimeout(() => {
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+        setIsLoading(false);
+      }, 100);
+    } catch (error) {
+        console.error("Download failed:", error);
+     console.log("Server response:", error?.response?.data);
+      alert("PDF generation failed. Please check your resume data.");
+      
     }
+    finally {
+        setShowButtons(true);
+        setIsDownloading(false);
+    }
+  };
 
-    pdf.save("resume.pdf");
-  } catch (err) {
-    console.error("Download error:", err);
-    alert("Failed to generate PDF. Please try again.");
-  } finally {
-    setShowButtons(true);
-    setIsDownloading(false);
-  }
-}, []);
 
 
 // const handleDownload = useCallback(async () => {

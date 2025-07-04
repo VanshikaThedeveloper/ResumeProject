@@ -9,8 +9,10 @@ const fs = require('fs');
 const {
   saveResume,
   loadResume,
-  enhanceResume,
-  uploadResume
+  enhanceField,
+  uploadResume,
+  generatePDF,
+  
 } = require('../controllers/template13controller.js');
 
 
@@ -45,7 +47,8 @@ const storage = multer.diskStorage({
 
 router.post('/save', saveResume);
 router.get('/load', loadResume);
-router.post('/enhance', enhanceResume);
+router.post('/enhanceField', enhanceField);
+router.post('/generate-pdf', generatePDF);
 router.post('/upload-resume', upload.single("resumeFile"), uploadResume);
 
 module.exports = router;
