@@ -406,33 +406,6 @@ const [showUploadButton, setUploadButton] = useState(false);
 
 
 
- const handleAIEnhancementClick = useCallback((e) => {
-  const rect = e.currentTarget.getBoundingClientRect();
-  setAiMenuPosition({ top: rect.bottom, left: rect.left });
-  saveResumeToBackend();  // Auto-save before showing AI menu
-  setShowAIMenu(true);
-}, []);
-
-
-
-// const saveResumeToBackend = useCallback(async () => {
-//   const dataToSave = {
-//     resumeData,
-//     sectionSettings,
-//     branding,
-//     sectionsOrder
-//   };
-
-//   try {
-//     await axios.post("http://localhost:4000/save", dataToSave);
-//     console.log("✅ Resume auto-saved before enhancement");
-//   } catch (err) {
-//     console.error("❌ Failed to auto-save before enhancement:", err.message);
-//     throw err;
-//   }
-// }, [resumeData, sectionSettings, branding, sectionsOrder]);
-
-
 
 const saveResumeToBackend = useCallback(async () => {
   const dataToSave = {
@@ -457,6 +430,57 @@ const saveResumeToBackend = useCallback(async () => {
   } catch (err) {
     console.error("❌ Failed to auto-save before enhancement:", err.message);
     throw err;
+  }
+}, [resumeData, sectionSettings, branding, sectionsOrder]);
+
+
+const handleAIEnhancementClick = useCallback((e) => {
+  // Forcefully blur any active contentEditable field
+  if (document.activeElement) {
+    document.activeElement.blur(); // this will trigger onBlur and update resumeData
+  }
+
+  const rect = e.currentTarget.getBoundingClientRect();
+  setAiMenuPosition({ top: rect.bottom, left: rect.left });
+
+  // Now safe to save latest data
+  saveResumeToBackend();  
+  setShowAIMenu(true);
+}, [saveResumeToBackend]);
+
+
+
+
+const handleSaveResume = useCallback(async () => {
+  try {
+    const dataToSave = {
+      resumeData,
+      sectionSettings,
+      branding,
+      sectionsOrder,
+    };
+
+    const response = await axios.post(
+      "http://localhost:4000/save",
+      dataToSave,
+      { headers: { "Content-Type": "application/json" } }
+    );
+
+    // ✅ Set _id if it's returned and not already present
+    if (response.data?.data?._id) {
+  setResumeData(prev => ({
+    ...prev,
+    _id: response.data.data._id
+  }));
+}
+
+
+    setShowSaveNotification(true);
+    setTimeout(() => setShowSaveNotification(false), 3000);
+  } catch (error) {
+    alert("Failed to save resume.");
+    console.error("Error saving resume:", error.message);
+    console.log("Full error response:", error?.response?.data);
   }
 }, [resumeData, sectionSettings, branding, sectionsOrder]);
 
@@ -596,59 +620,6 @@ const handleColorPicker = useCallback(() => {
   setShowColorPicker(true);
 }, []);
 
-
-// const handleSaveResume = useCallback(async () => {
-//   try {
-//     const dataToSave = {
-//       resumeData,
-//       sectionSettings,
-//       branding,
-//       sectionsOrder,
-//     };
-
-   
-//     const response = await axios.post(
-//       "http://localhost:4000/save",
-//       dataToSave,
-//       { headers: { "Content-Type": "application/json" } }   
-//     );
-
-//     setShowSaveNotification(true);                 
-//     setTimeout(() => setShowSaveNotification(false), 3000);
-   
-//   } catch (error) {
-//     alert("Failed to save resume.");
-//     console.error("Error saving resume:", error.message);
-//     console.log("Full error response:", error?.response?.data);
-//   }
-// }, [resumeData, sectionSettings, branding, sectionsOrder]); 
-
-
-
-
-const handleSaveResume = useCallback(async () => {
-  try {
-    const dataToSave = {
-      resumeData,
-      sectionSettings,
-      branding,
-      sectionsOrder,
-    };
-
-    const response = await axios.post(
-      "http://localhost:4000/save",
-      dataToSave,
-      { headers: { "Content-Type": "application/json" } }
-    );
-
-    setShowSaveNotification(true);
-    setTimeout(() => setShowSaveNotification(false), 3000);
-  } catch (error) {
-    alert("Failed to save resume.");
-    console.error("Error saving resume:", error.message);
-    console.log("Full error response:", error?.response?.data);
-  }
-}, [resumeData, sectionSettings, branding, sectionsOrder]);
 
 
 
@@ -819,108 +790,6 @@ const handleSaveResume = useCallback(async () => {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//   const handleDownload = useCallback(async () => {
-//   setShowButtons(false);
-//   setActiveSection(null);
-//   setIsDownloading(true);
-
-//   try {
-//     const element = resumeRef.current;
-//     if (!element) throw new Error("Resume element not found");
-
-//     await new Promise(r => setTimeout(r, 400));
-
-//     // ✅ Remove unsupported color formats like oklch using regex
-//     const sanitizeColors = (el) => {
-//       const style = window.getComputedStyle(el);
-//       const inline = el.style;
-//       for (const prop of ['color', 'backgroundColor', 'borderColor', 'boxShadow']) {
-//         const value = style[prop];
-//         if (value && /oklch\(/i.test(value)) {
-//           inline.setProperty(prop, '#000');
-//         }
-//       }
-//     };
-    
-//     // Traverse deeply into shadow DOMs if needed
-//     const walkAndSanitize = (root) => {
-//       const stack = [root];
-//       while (stack.length > 0) {
-//         const node = stack.pop();
-//         if (!(node instanceof HTMLElement)) continue;
-//         sanitizeColors(node);
-//         for (const child of node.children) {
-//           stack.push(child);
-//         }
-//       }
-//     };
-
-//     walkAndSanitize(element);
-
-//     const canvas = await html2canvas(element, {
-//       scale: 2,
-//       useCORS: true,
-//       allowTaint: true,
-//       logging: false,
-//       scrollX: 0,
-//       scrollY: 0,
-//     });
-
-//     const imgData = canvas.toDataURL("image/png");
-//     const pdf = new jsPDF("p", "pt", "a4");
-//     const pageW = pdf.internal.pageSize.getWidth();
-//     const pageH = pdf.internal.pageSize.getHeight();
-//     let imgH = (canvas.height * pageW) / canvas.width;
-//     let position = 0;
-
-//     if (imgH <= pageH) {
-//       pdf.addImage(imgData, "PNG", 0, 0, pageW, imgH);
-//     } else {
-//       while (position < imgH) {
-//         pdf.addImage(imgData, "PNG", 0, position, pageW, imgH);
-//         position -= pageH;
-//         if (position < imgH) pdf.addPage();
-//       }
-//     }
-
-//     pdf.save("resume.pdf");
-//   } catch (err) {
-//     console.error("Download error:", err);
-//     alert("Failed to generate PDF. Please try again.");
-//   } finally {
-//     setShowButtons(true);
-//     setIsDownloading(false);
-//   }
-// }, []);
-
-
-
-
-
-
-
-
-
 const handleDownload = async () => {
     try {
       setShowButtons(false);
@@ -961,70 +830,6 @@ const handleDownload = async () => {
         setIsDownloading(false);
     }
   };
-
-
-
-// const handleDownload = useCallback(async () => {
-//   setShowButtons(false);
-//   setActiveSection(null);
-//   setIsDownloading(true);
-
-//   try {
-//     const resumeElement = resumeRef.current;
-//     if (!resumeElement) {
-//       console.error("Resume element not found");
-//       setShowButtons(true);
-//       setIsDownloading(false);
-//       return;
-//     }
-
-//     await new Promise((resolve) => setTimeout(resolve, 500));
-
-//     const canvas = await html2canvas(resumeElement, {
-//       scale: 2,
-//       useCORS: true,
-//       logging: true,
-//       scrollX: 0,
-//       scrollY: 0,
-//       windowWidth: resumeElement.scrollWidth,
-//       windowHeight: resumeElement.scrollHeight,
-//       height: resumeElement.scrollHeight,
-//     });
-
-//     const imgData = canvas.toDataURL("image/png");
-//     const pdf = new jsPDF({
-//       orientation: "portrait",
-//       unit: "mm",
-//       format: "a4",
-//     });
-
-//     const pageWidth = pdf.internal.pageSize.getWidth();
-//     const imgWidth = pageWidth;
-//     const imgHeight = Math.min(
-//       (canvas.height * pageWidth) / canvas.width,
-//       pdf.internal.pageSize.getHeight(),
-//     );
-
-//     pdf.addImage(imgData, "PNG", 0, 0, imgWidth, imgHeight);
-//     pdf.save("resume.pdf"); // ✅ This will trigger download locally
-
-//   } catch (error) {
-//     console.error("Error generating PDF:", error);
-//     alert("Failed to generate PDF. Please try again.");
-//   } finally {
-//     setShowButtons(true);
-//     setIsDownloading(false);
-//   }
-// }, []);
-
-
-
-
-
-
-
-
-
 
 
 

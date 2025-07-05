@@ -7,14 +7,14 @@ const path = require("path");
 const puppeteer = require("puppeteer");
 const Temp13Resume = require("../models/template13model");
 
+const mongoose = require("mongoose");
+
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
 
 const loadResume = async (req, res) => {
   try {
-    // const db = getDb();
-    // const latestResume = await db.collection("resume").findOne({}, { sort: { _id: -1 } });
 
     const latestResume = await Temp13Resume.findOne().sort({ _id: -1 });
 
@@ -220,97 +220,33 @@ const uploadResume = async (req, res) => {
 
 
 
-// const saveResume = async (req, res) => {
-//   const resumeData = req.body;
-//   // const db = getDb();
-
-//   try {
-//     // const result = await db.collection("resume").updateOne(
-//     //   {},
-//     //   { $set: resumeData },
-//     //   { upsert: true }
-//     // );
-
-
-//     const newResume = new Temp13Resume(resumeData);
-// await newResume.save();
-
-//     console.log("✅ Resume saved successfully!", result);
-//     res.status(200).json({ message: "Resume saved successfully!" });
-//   } catch (err) {
-//     console.error("❌ Error saving resume:", err.message);
-//     res.status(500).json({ message: "Failed to save resume." });
-//   }
-// };
-   
-
-
-// const saveResume = async (req, res) => {
-//   const { resumeData, sectionSettings, branding, sectionsOrder } = req.body;
-
-//   try {
-//     const newResume = new Temp13Resume({
-//       resumeData,
-//       sectionSettings,
-//       branding,
-//       sectionsOrder,
-//     });
-
-//     await newResume.save();
-
-//     console.log("✅ Resume saved successfully!");
-//     res.status(200).json({ message: "Resume saved successfully!" });
-//   } catch (err) {
-//     console.error("❌ Error saving resume:", err);
-//     res.status(500).json({ message: "Failed to save resume." });
-//   }
-// };
-
-
-
 
 const saveResume = async (req, res) => {
-  const { resumeData, sectionSettings, branding, sectionsOrder } = req.body;
-
   try {
-    const newResume = new Temp13Resume({
-      resumeData,
-      sectionSettings,
-      branding,
-      sectionsOrder,
-    });
+    const { resumeData, sectionSettings, branding, sectionsOrder } = req.body;
 
-    const saved = await newResume.save();
+    let saved;
 
-    res.status(200).json({ message: "Resume saved successfully!", data: saved });
-  } catch (err) {
-    console.error("❌ Error saving resume:", err);
-    res.status(500).json({ message: "Failed to save resume." });
+    if (resumeData._id && mongoose.Types.ObjectId.isValid(resumeData._id)) {
+      saved = await Temp13Resume.findByIdAndUpdate(
+        resumeData._id,
+        { resumeData, sectionSettings, branding, sectionsOrder },
+        { new: true }
+      );
+    }
+
+    if (!saved) {
+      const newResume = new Temp13Resume({ resumeData, sectionSettings, branding, sectionsOrder });
+      saved = await newResume.save();
+    }
+
+    res.status(200).json({ message: "Resume saved successfully", data: saved });
+  } catch (error) {
+    console.error("Error saving resume:", error);
+    res.status(500).json({ message: "Error saving resume", error: error.message });
   }
 };
 
-
-
-
-// const saveResume = async (req, res) => {
-//   try {
-//     const resumeData = req.body.resumeData;
-//     if (!resumeData) return res.status(400).json({ message: "Resume data is required" });
-
-//     let savedResume;
-//     if (resumeData._id) {
-//       savedResume = await Temp13Resume.findByIdAndUpdate(resumeData._id, resumeData, { new: true });
-//       if (!savedResume) return res.status(404).json({ message: "Resume not found" });
-//     } else {
-//       const newResume = new Temp13Resume(resumeData);
-//       savedResume = await newResume.save();
-//     } 
-//     res.status(200).json({ message: "Resume saved successfully", data: savedResume });
-//   } catch (error) {
-//     console.error("Error saving resume:", error);
-//     res.status(500).json({ message: "Error saving resume", error: error.message });
-//   }
-// };
 
 
 
