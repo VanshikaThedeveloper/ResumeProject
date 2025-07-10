@@ -262,21 +262,10 @@ const ResumeEditor = () => {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
   const [selectedFile, setSelectedFile] = useState(null);
 
     const [message, setMessage] = useState('');
-  const [text, setText] = useState('');
+
 
    
   // const handleFileChange = async (event) => {
@@ -330,13 +319,6 @@ const handleManualButton = ()=>{
   
 }
 
-
-
-const handleAiEditButton = ()=>{
-  alert("Ai edit mode enabled");
-
-  
-}
 
 
 
@@ -482,37 +464,8 @@ const handleSaveResume = useCallback(async () => {
   }
 }, [resumeData, sectionSettings, branding, sectionsOrder]);
 
-// const handleEnhanceSection = async (field) => {
-//   try {
-//     const response = await axios.post('http://localhost:4000/enhanceField', {
-//       resumeId: resumeData._id,
-//       field,
-//     });
-
-//     if (response.data?.data?.resumeData) {
-//       setResumeData(response.data.data.resumeData); // 🧠 Update state
-//       alert(`${field} enhanced successfully!`);
-//     } else {
-//       alert("Enhanced data not returned.");
-//     }
-//   } catch (error) {
-//     console.error("Enhancement failed:", error?.response?.data || error.message);
-//     alert(`Failed to enhance ${field}.`);
-//   }
-// };
 
 
-
-//  const handleAIEnhancement = async () => {
-//     if (!editableContent._id) {
-//       await saveResume();
-//       alert("Resume saved. Click AI Assistant again to enhance.");
-//       return;
-//     }
-//     setIsLoading(true);
-//     setShowEnhancementOptions(true);
-//     setIsLoading(false);
-//   };
 
  const enhanceSingleField = async (field) => {
   if (!resumeData._id) {
@@ -542,47 +495,6 @@ const handleSaveResume = useCallback(async () => {
     setIsLoading(false);
   }
 };
-
-
-
-
-
-
-
-
-
-// corrected code 
-  
-// const handleEnhanceSection = async (field) => {
-   
-//     try {
-//       const response = await axios.post('http://localhost:4000/enhanceField', {
-//         resumeId: resumeData._id,
-//         field,
-//       });
-//        if (response.data?.data?.resumeData) {
-//       setResumeData(response.data.data.resumeData); // Update resume state
-//       alert(`${field} enhanced successfully!`);
-//     } else {
-//       alert("Enhanced data not returned.");
-//     }
-//     } catch (error) {
-//       if (error.response) {
-//     console.error("Server Error:", error.response.data);
-//   } else if (error.request) {
-//     console.error("No Response:", error.request);
-//   } else {
-//     console.error("Error", error.message);
-//   }
-//   alert(`Failed to enhance ${field}.`);
-// } finally {
-//   // Close menu after enhancing
-  
-// }
-// };
-
-
-
 
 
 
@@ -770,6 +682,86 @@ useEffect(() => {
 
 
 
+
+
+
+
+
+
+
+
+
+  const enhanceAllFields = async () => {
+    if (!resumeData._id) {
+      alert("Please save your resume before enhancing.");
+      return;
+    }
+    setIsLoading(true);
+    try {
+      // List of fields to enhance
+      const fields = ["summary", "experience", "achievements", "projects"];
+      let updatedResume = { ...resumeData };
+  
+      for (const field of fields) {
+        try {
+          const response = await axios.post('http://localhost:4000/enhanceField', {
+            resumeId: resumeData._id,
+            field,
+          });
+          if (response.data?.data?.resumeData) {
+            updatedResume = response.data.data.resumeData;
+          }
+        } catch (err) {
+          console.error(`Error enhancing ${field}:`, err);
+          // Optionally show a message for this field
+        }
+      }
+      setResumeData(updatedResume);
+      alert("✅ All fields enhanced successfully!");
+    } catch (error) {
+      console.error("Error enhancing all fields:", error);
+      alert("❌ Failed to enhance all fields.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+
+
+  const handleAiEditButton = () => {
+    alert("Ai edit mode enabled");
+    enhanceAllFields();
+  };
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 const handleDownload = async () => {
     try {
       setShowButtons(false);
@@ -870,47 +862,47 @@ const handleDownload = async () => {
     });
 
     const parsed = res.data.data;
-
-  
+    const rawText = res.data.rawText;
+    console.log("Parsed AI data:", parsed);
     const mappedData = {
-      name: parsed?.header?.name || "",
-      role: parsed?.header?.title || "",
-      phone: parsed?.header?.contact?.phone || "",
-      email: parsed?.header?.contact?.email || "",
-      linkedin: "",
-      location: parsed?.header?.contact?.location || "",
-      summary: parsed?.summary || "",
-      experience: parsed?.experience?.map((exp) => ({
-        title: exp.title || "",
-        companyName: exp.company || "",
-        date: exp.period || "",
-        companyLocation: "",
-        accomplishment: exp.description || "",
-      })) || [],
-      education: parsed?.education?.map((edu) => ({
-        degree: edu.degree || "",
-        institution: edu.school || "",
-        duration: edu.period || "",
-        location: "",
-      })) || [],
-      skills: parsed?.skills?.clientSide?.split(',').map((s) => ({ category: s.trim(), items: [s.trim()] })) || [],
-      achievements: parsed?.achievements?.map((ach) => ({
-        title: ach.title || "",
-        description: ach.description || "",
-      })) || [],
-      projects: parsed?.projects?.map((proj) => ({
-        title: proj.title || "",
-        description: proj.description || "",
-        year: proj.year || "",
-      })) || [],
-      philosophy: { quote: "", author: "" },
-      expertise: [],
-      strengths: [],
-      languages: [],
-      references: [],
+      name: parsed?.contact?.name ?? resumeData.name,
+      role: resumeData.role, // If you want to extract role/title, add logic here
+      phone: parsed?.contact?.phone ?? resumeData.phone,
+      email: parsed?.contact?.email ?? resumeData.email,
+      linkedin: resumeData.linkedin, // If you want to extract, add logic
+      location: parsed?.contact?.location ?? resumeData.location,
+      summary: parsed?.summary ?? resumeData.summary,
+      experience: parsed?.workExperience?.map((exp, i) => ({
+        title: exp.title || (resumeData.experience?.[i]?.title ?? ""),
+        companyName: exp.company || (resumeData.experience?.[i]?.companyName ?? ""),
+        date: exp.period || (resumeData.experience?.[i]?.date ?? ""),
+        companyLocation: exp.location || (resumeData.experience?.[i]?.companyLocation ?? ""),
+        accomplishment: exp.description || (resumeData.experience?.[i]?.accomplishment ?? ""),
+      })) || resumeData.experience,
+      education: parsed?.education?.map((edu, i) => ({
+        degree: edu.degree || (resumeData.education?.[i]?.degree ?? ""),
+        institution: edu.institution || (resumeData.education?.[i]?.institution ?? ""),
+        duration: edu.dates || (resumeData.education?.[i]?.duration ?? ""),
+        location: (resumeData.education?.[i]?.location ?? ""),
+      })) || resumeData.education,
+      skills: parsed?.skills
+        ? parsed.skills.map((s, i) => ({
+            category: s,
+            items: [s]
+          }))
+        : resumeData.skills,
+      achievements: resumeData.achievements,
+      projects: resumeData.projects,
+      philosophy: resumeData.philosophy,
+      expertise: resumeData.expertise,
+      strengths: resumeData.strengths,
+      languages: resumeData.languages,
+      references: resumeData.references,
     };
-
+  
+  
     setResumeData(mappedData);
+    setText(rawText);
     alert("✅ Resume uploaded and populated");
   } catch (err) {
     console.error("Upload AI parse error", err);
@@ -977,19 +969,22 @@ const handleDownload = async () => {
     setActiveColor(color);
   }, []);
 
-  const LoadingScreen = useMemo(
-    () => (
-      <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
-        <div className="flex flex-col items-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500 mb-4"></div>
-          <p className="text-white text-xl font-semibold">
-            Enhancing your resume...
-          </p>
-        </div>
+
+  const LoadingScreen = React.memo(function LoadingScreen() {
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
+      <div className="flex flex-col items-center">
+        <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500 mb-4" />
+        <p className="text-white text-xl font-semibold">
+          Enhancing your resume...
+        </p>
       </div>
-    ),
-    [],
+    </div>
   );
+});
+
+
+
 
   const DownloadPreloader = () => (
     <motion.div
@@ -1653,7 +1648,7 @@ const handleDownload = async () => {
 
 
                  <div className="p-4 space-y-4">
-     
+                
       
       {/* Show message */}
       {message && (
@@ -1662,13 +1657,7 @@ const handleDownload = async () => {
         </p>
       )}
 
-      {/* Show extracted text */}
-      {text && (
-        <div className="bg-gray-100 p-4 rounded max-h-96 overflow-y-auto">
-          <h3 className="font-bold mb-2">📄 Extracted Text:</h3>
-          <p className="text-sm whitespace-pre-wrap">{text}</p>
-        </div>
-      )}
+     
     </div>
 
 
@@ -2302,30 +2291,11 @@ const handleDownload = async () => {
             Enhance Experience
           </button>
           <button
-            onClick={() => enhanceSingleField("education")}
-            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
-          >
-            Enhance Education
-          </button>
-          <button
             onClick={() => enhanceSingleField("achievements")}
             className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
           >
             Enhance Achievements
           </button>
-          <button
-            onClick={() => enhanceSingleField("strengths")}
-            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
-          >
-            Enhance Strengths
-          </button>
-          <button
-            onClick={() => enhanceSingleField("philosophy")}
-            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
-          >
-            Enhance My life philosphy
-          </button>
-
 
           <button
             onClick={() => setShowAIMenu(false)}

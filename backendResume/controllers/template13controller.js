@@ -121,10 +121,13 @@ const enhanceField = async (req, res) => {
       console.log("🧠 Enhanced Summary:", resume.resumeData.summary);
     } else if (field === "experience") {
       resume.experience = await enhanceExperience(resume.experience);
+      console.log("🧠 Enhanced experience:", resume.resumeData.experience);
     } else if (field === "achievements") {
       resume.achievements = await enhanceAchievements(resume.achievements);
+      console.log("🧠 Enhanced achievements:", resume.resumeData.achievements);
     } else if (field === "projects") {
       resume.projects = await enhanceProjects(resume.projects);
+      console.log("🧠 Enhanced projects:", resume.resumeData.projects);
     } else {
       return res.status(400).json({ message: `Field '${field}' not supported` });
     }
@@ -137,140 +140,7 @@ const enhanceField = async (req, res) => {
   }
 };
 
-
-
-
-
-
-
-// const GeminiFunctionField = async (category, fieldName, userInput, retries = 3) => {
-//   while (retries > 0) {
-//     try {
-//       const prompt = `
-// Enhance this ${category} field '${fieldName}' for a resume:
-// - Keep it ATS-optimized with industry keywords.
-// - Use clear, concise, professional language.
-// - Include strong action verbs and quantifiable results where applicable.
-// User Input: ${JSON.stringify(userInput)}
-// Return only JSON: {"${fieldName}": "Enhanced text"}
-//       `;
-//       const result = await model.generateContent([prompt]);
-//       const responseText = result.response.text().trim().replace(/```json|```/g, "");
-//       const parsedResponse = JSON.parse(responseText);
-//       if (parsedResponse[fieldName]) return parsedResponse[fieldName];
-//       return userInput;
-//     } catch (error) {
-//       console.error(`Error enhancing ${category} field '${fieldName}':`, error.message);
-//       retries--;
-//       await new Promise((resolve) => setTimeout(resolve, 7000));
-//     }
-//   }
-//   return userInput;
-// };
-
-// // Helper: Enhance array-based sections
-// const enhanceExperience = async (experienceArray) => {
-//   if (!Array.isArray(experienceArray)) return experienceArray;
-//   return Promise.all(
-//     experienceArray.map(async (exp) => ({
-//       ...exp,
-//       description: await GeminiFunctionField("experience", "description", exp.description),
-//     }))
-//   );
-// };
-
-// const enhanceAchievements = async (achievementsArray) => {
-//   if (!Array.isArray(achievementsArray)) return achievementsArray;
-//   return Promise.all(
-//     achievementsArray.map(async (ach) => ({
-//       ...ach,
-//       description: await GeminiFunctionField("achievements", "description", ach.description),
-//     }))
-//   );
-// };
-
-// const enhanceProjects = async (projectsArray) => {
-//   if (!Array.isArray(projectsArray)) return projectsArray;
-//   return Promise.all(
-//     projectsArray.map(async (proj) => ({
-//       ...proj,
-//       description: await GeminiFunctionField("projects", "description", proj.description),
-//     }))
-//   );
-// };
-
-
-
-
-// const enhanceField = async (req, res) => {
-//   try {
-//     const { resumeId, field } = req.body;
-//     if (!resumeId || !field) return res.status(400).json({ message: "Resume ID and field are required" });
-
-//     const resume = await Temp13Resume.findById(resumeId); // Update to Temp5Resume
-//     if (!resume) return res.status(404).json({ message: "Resume not found" });
-
-//     if (field === "summary") {
-//       resume.resumeData.summary = await GeminiFunctionField("summary", "summary", resume.resumeData.summary || "");
-//        console.log("🧠 Enhanced Summary:", resume.resumeData.summary);
-//     } else if (field === "experience") {
-//       resume.resumeData.experience = await enhanceExperience(resume.resumeData.experience);
-//       console.log("🧠 Enhanced Experience:", resume.resumeData.experience);
-//     } else if (field === "achievements") {
-//       resume.resumeData.achievements = await enhanceAchievements(resume.resumeData.achievements);
-//       console.log("🧠 Enhanced Achievements:", resume.resumeData.achievements);
-//     } else if (field === "projects") {
-//       resume.resumeData.projects = await enhanceProjects(resume.resumeData.projects);
-//     } else {
-//       return res.status(400).json({ message: `Field '${field}' not supported` });
-//     }
-
-//     const updatedResume = await resume.save();
-//     res.json({ message: `Field ${field} enhanced successfully`, data: updatedResume });
-
-//   } catch (error) {
-//     console.error("Error enhancing field:", error);
-//     res.status(500).json({ message: "Error enhancing field", error: error.message });
-//   }
-// };
-
-
-
-
-
-
-
-// const enhanceResume = async (req, res) => {
-//   const { type, content } = req.body;
-
-//   if (!type || !content) {
-//     return res.status(400).json({ error: "Missing type or content." });
-//   }
-
-//   try {
-//     const prompt = `
-// You are an AI resume assistant. Please improve the following "${type}" section. Make it more impactful, professional, and impressive. Keep the tone suitable for job applications.
-
-// Content:
-// """
-// ${content}
-// """
-
-// Respond with only the enhanced version.
-// `;
-
-//     const result = await model.generateContent([prompt]);
-//     const enhancedText = result.response.text();
-
-
-     
-
-//     res.status(200).json({ enhanced: enhancedText });
-//   } catch (err) {
-//     console.error("❌ AI Enhancement Error:", err.message);
-//     res.status(500).json({ error: "AI enhancement failed." });
-//   }
-// };
+;
 
 
 
@@ -287,9 +157,13 @@ const extractTextFromDOCX = async (filePath) => {
   return result.value.trim();
 };
 
+
+
+
 const parseResumeWithAI = async (text) => {
+  if (!geminiModel) throw new Error("Gemini AI model is not initialized.");
   const prompt = `Extract the following resume into structured JSON: {text: "${text}"}`;
-  const result = await model.generateContent([prompt]);
+  const result = await geminiModel.generateContent([prompt]);
   const responseText = result.response.text().trim();
   return JSON.parse(responseText.replace(/json|```/g, '').trim());
 };
@@ -308,7 +182,8 @@ const uploadResume = async (req, res) => {
     const parsedData = await parseResumeWithAI(extractedText);
     fs.unlinkSync(filePath);
 
-    res.status(200).json({ success: true, data: parsedData });
+    // Return both parsedData and extractedText
+    res.status(200).json({ success: true, data: parsedData, rawText: extractedText });
   } catch (error) {
     console.error("Upload error:", error.message);
     res.status(500).json({ success: false, message: error.message });
