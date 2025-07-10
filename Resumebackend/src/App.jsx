@@ -5,8 +5,7 @@ import React, {
   useCallback,
   useMemo,
 } from "react";
-import { jsPDF } from "jspdf";
-import html2canvas from "html2canvas";
+
 // import { Download, Upload, Share, Settings, Edit, Plus, Save, Trash2, Bot, ArrowUp, ArrowDown, Mail } from "lucide-react";
 import { motion } from "framer-motion";
 const API_BASE = "http://localhost:4000";
@@ -15,7 +14,6 @@ import axios from "axios";
 
 import './pdf-worker'
 
-import * as pdfjsLib from 'pdfjs-dist';
 
 
 
@@ -281,49 +279,49 @@ const ResumeEditor = () => {
   const [text, setText] = useState('');
 
    
-  const handleFileChange = async (event) => {
-    const file = event.target.files[0];
+  // const handleFileChange = async (event) => {
+  //   const file = event.target.files[0];
 
-    if (file && file.type === 'application/pdf') {
-       setSelectedFile(file);
-      try {
-        const reader = new FileReader();
+  //   if (file && file.type === 'application/pdf') {
+  //      setSelectedFile(file);
+  //     try {
+  //       const reader = new FileReader();
 
-        reader.onload = async () => {
-          try {
-            const typedArray = new Uint8Array(reader.result);
-            const pdf = await pdfjsLib.getDocument({ data: typedArray }).promise;
+  //       reader.onload = async () => {
+  //         try {
+  //           const typedArray = new Uint8Array(reader.result);
+  //           const pdf = await pdfjsLib.getDocument({ data: typedArray }).promise;
 
-            let fullText = '';
+  //           let fullText = '';
 
-            for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-              const page = await pdf.getPage(pageNum);
-              const content = await page.getTextContent();
-              const strings = content.items.map(item => item.str);
-              fullText += strings.join(' ') + '\n\n';
-            }
+  //           for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+  //             const page = await pdf.getPage(pageNum);
+  //             const content = await page.getTextContent();
+  //             const strings = content.items.map(item => item.str);
+  //             fullText += strings.join(' ') + '\n\n';
+  //           }
 
-            setText(fullText);
-            setMessage('✅ File was auto-read successfully!');
-          } catch (err) {
-            console.error('Read error:', err);
-            setMessage('❌ File was not auto-read.');
-          }
-        };
+  //           setText(fullText);
+  //           setMessage('✅ File was auto-read successfully!');
+  //         } catch (err) {
+  //           console.error('Read error:', err);
+  //           setMessage('❌ File was not auto-read.');
+  //         }
+  //       };
 
-        reader.onerror = () => {
-          setMessage('❌ Failed to read file.');
-        };
+  //       reader.onerror = () => {
+  //         setMessage('❌ Failed to read file.');
+  //       };
 
-        reader.readAsArrayBuffer(file);
-      } catch (err) {
-        console.error('Outer error:', err);
-        setMessage('❌ File was not auto-read.');
-      }
-    } else {
-      setMessage('❌ Please upload a valid PDF file.');
-    }
-  };
+  //       reader.readAsArrayBuffer(file);
+  //     } catch (err) {
+  //       console.error('Outer error:', err);
+  //       setMessage('❌ File was not auto-read.');
+  //     }
+  //   } else {
+  //     setMessage('❌ Please upload a valid PDF file.');
+  //   }
+  // };
 
 
 
@@ -484,94 +482,65 @@ const handleSaveResume = useCallback(async () => {
   }
 }, [resumeData, sectionSettings, branding, sectionsOrder]);
 
+// const handleEnhanceSection = async (field) => {
+//   try {
+//     const response = await axios.post('http://localhost:4000/enhanceField', {
+//       resumeId: resumeData._id,
+//       field,
+//     });
 
-
-//  const saveResumeToBackend = async () => {
-//     try {
-//       const response = await axios.post("http://localhost:4000/save", { resumeData: editableContent });
-//       if (response.data?.data?._id) {
-//         setResumeData(prev => ({ ...prev, _id: response.data.data._id }));
-//         alert("Resume saved successfully!");
-//       }
-//     } catch (error) {
-//       console.error("Error saving resume:", error);
-//       alert("Failed to save resume.");
+//     if (response.data?.data?.resumeData) {
+//       setResumeData(response.data.data.resumeData); // 🧠 Update state
+//       alert(`${field} enhanced successfully!`);
+//     } else {
+//       alert("Enhanced data not returned.");
 //     }
+//   } catch (error) {
+//     console.error("Enhancement failed:", error?.response?.data || error.message);
+//     alert(`Failed to enhance ${field}.`);
+//   }
+// };
+
+
+
+//  const handleAIEnhancement = async () => {
+//     if (!editableContent._id) {
+//       await saveResume();
+//       alert("Resume saved. Click AI Assistant again to enhance.");
+//       return;
+//     }
+//     setIsLoading(true);
+//     setShowEnhancementOptions(true);
+//     setIsLoading(false);
 //   };
 
+ const enhanceSingleField = async (field) => {
+  if (!resumeData._id) {
+    alert("Please save your resume before enhancing a field.");
+    return;
+  }
+  try {
+    setIsLoading(true);
+    const response = await axios.post('http://localhost:4000/enhanceField', {
+      resumeId: resumeData._id,
+      field,
+    });
 
+    const updated = response.data?.data;
 
-
-
-// const handleEnhanceSection = useCallback(
-//   async (section) => {
-//     setShowAIMenu(false);                       // 1. close menu immediately
-//     try {
-//       await saveResumeToBackend();              // ✅ 2. AUTO-SAVE
-//       const rawContent = resumeData[section];   // 3. get latest data
-
-//       const content =
-//         typeof rawContent === "string"
-//           ? rawContent
-//           : JSON.stringify(rawContent, null, 2);
-
-//       const { data } = await axios.post(`${API_BASE}/enhance`, {
-//         type: section,
-//         content,
-//       });
-
-//       const improved = data.enhanced;
-
-//       // 4. apply enhanced content back to state
-//       if (typeof rawContent === "string") {
-//        setResumeData((prev) => ({ ...prev, [section]: improved }));
-//       } else {
-//         setResumeData((prev) => {
-//           const updated = [...prev[section]];
-//           if (updated[0]) {
-//             if (section === "experience") updated[0].accomplishment = improved;
-//             else if (section === "education") updated[0].degree = improved;
-//             else if (section === "achievements") updated[0].description = improved;
-//             else if (section === "strengths") updated[0].description = improved;
-//           }
-//           return { ...prev, [section]: updated };
-//         });
-//       }
-//     } catch (err) {
-//       console.error("AI Enhance Error:", err?.response?.data || err.message);
-//       setShowAIErrorPopup(true);
-//       setTimeout(() => setShowAIErrorPopup(false), 3000);
-//     }
-//   },
-//   [resumeData, sectionSettings, branding, sectionsOrder, API_BASE]
-// );
-  
-const handleEnhanceSection = async (field) => {
-   
-    try {
-      const response = await axios.post('http://localhost:4000/enhanceField', {
-        resumeId: resumeData._id,
-        field,
-      });
-       if (response.data?.data?.resumeData) {
-      setResumeData(response.data.data.resumeData); // Update resume state
+    if (updated?.resumeData) {
+      // ✅ Safe: set actual resumeData object
+      setResumeData(updated.resumeData);
       alert(`${field} enhanced successfully!`);
     } else {
-      alert("Enhanced data not returned.");
+      alert("Enhanced data not returned in expected format.");
     }
-    } catch (error) {
-      if (error.response) {
-    console.error("Server Error:", error.response.data);
-  } else if (error.request) {
-    console.error("No Response:", error.request);
-  } else {
-    console.error("Error", error.message);
+  } catch (error) {
+    console.error(`Error enhancing ${field}:`, error);
+    alert(`Failed to enhance ${field}.`);
+  } finally {
+    setIsLoading(false);
   }
-  alert(`Failed to enhance ${field}.`);
-} finally {
-  // Close menu after enhancing
-  
-}
 };
 
 
@@ -582,24 +551,35 @@ const handleEnhanceSection = async (field) => {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+// corrected code 
+  
+// const handleEnhanceSection = async (field) => {
+   
+//     try {
+//       const response = await axios.post('http://localhost:4000/enhanceField', {
+//         resumeId: resumeData._id,
+//         field,
+//       });
+//        if (response.data?.data?.resumeData) {
+//       setResumeData(response.data.data.resumeData); // Update resume state
+//       alert(`${field} enhanced successfully!`);
+//     } else {
+//       alert("Enhanced data not returned.");
+//     }
+//     } catch (error) {
+//       if (error.response) {
+//     console.error("Server Error:", error.response.data);
+//   } else if (error.request) {
+//     console.error("No Response:", error.request);
+//   } else {
+//     console.error("Error", error.message);
+//   }
+//   alert(`Failed to enhance ${field}.`);
+// } finally {
+//   // Close menu after enhancing
+  
+// }
+// };
 
 
 
@@ -624,33 +604,33 @@ const handleColorPicker = useCallback(() => {
 
 
 
-// useEffect(() => {
-//   const loadSavedResume = async () => {
-//     try {
-//       const response = await axios.get("http://localhost:4000/load");
-//       const savedData = response.data;
+useEffect(() => {
+  const loadSavedResume = async () => {
+    try {
+      const response = await axios.get("http://localhost:4000/load");
+      const savedData = response.data;
 
-//       // Set the state from saved data
-//       setResumeData(savedData.resumeData || {});
-//       setSectionSettings(savedData.sectionSettings || {});
-//       setBranding(savedData.branding || {});
-//       setSectionsOrder(savedData.sectionsOrder || []);
-//     } catch (error) {
-//       if (error.response && error.response.status === 404) {
-//         console.log("No saved resume found yet.");
-//       } else {
-//         console.error("Failed to load resume:", error.message);
-//       }
-//     }
-//   };
+      // Set the state from saved data
+      setResumeData(savedData.resumeData || {});
+      setSectionSettings(savedData.sectionSettings || {});
+      setBranding(savedData.branding || {});
+      setSectionsOrder(savedData.sectionsOrder || []);
+    } catch (error) {
+      if (error.response && error.response.status === 404) {
+        console.log("No saved resume found yet.");
+      } else {
+        console.error("Failed to load resume:", error.message);
+      }
+    }
+  };
 
-//   loadSavedResume(); // Call when component mounts
-// }, []);
-
-
+  loadSavedResume(); // Call when component mounts
+}, []);
 
 
-// 
+
+
+
 
 
 
@@ -2310,37 +2290,37 @@ const handleDownload = async () => {
           onClick={handleAIMenuClose}
         >
           <button
-            onClick={() => handleEnhanceSection("summary")}
+            onClick={() => enhanceSingleField("summary")}
             className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
           >
             Enhance Summary
           </button>
           <button
-            onClick={() => handleEnhanceSection("experience")}
+            onClick={() => enhanceSingleField("experience")}
             className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
           >
             Enhance Experience
           </button>
           <button
-            onClick={() => handleEnhanceSection("education")}
+            onClick={() => enhanceSingleField("education")}
             className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
           >
             Enhance Education
           </button>
           <button
-            onClick={() => handleEnhanceSection("achievements")}
+            onClick={() => enhanceSingleField("achievements")}
             className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
           >
             Enhance Achievements
           </button>
           <button
-            onClick={() => handleEnhanceSection("strengths")}
+            onClick={() => enhanceSingleField("strengths")}
             className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
           >
             Enhance Strengths
           </button>
           <button
-            onClick={() => handleEnhanceSection("philosophy")}
+            onClick={() => enhanceSingleField("philosophy")}
             className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
           >
             Enhance My life philosphy

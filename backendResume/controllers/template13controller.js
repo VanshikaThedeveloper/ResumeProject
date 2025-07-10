@@ -8,9 +8,24 @@ const puppeteer = require("puppeteer");
 const Temp13Resume = require("../models/template13model");
 
 const mongoose = require("mongoose");
+let genAI = null;
+let geminiModel = null;
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+// const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+// const model = genAI.getGenerativeModel({ model: "models/gemini-pro" });
+
+
+
+if (process.env.GEMINI_API_KEY) {
+  try {
+    genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    geminiModel = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+  } catch (error) {
+    console.warn("Failed to initialize Gemini API:", error.message);
+  }
+} else {
+  console.warn("GEMINI_API_KEY not found in environment variables. AI features will be disabled.");
+}
 
 
 const loadResume = async (req, res) => {
@@ -35,18 +50,6 @@ const loadResume = async (req, res) => {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
 const GeminiFunctionField = async (category, fieldName, userInput, retries = 3) => {
   while (retries > 0) {
     try {
@@ -58,7 +61,7 @@ Enhance this ${category} field '${fieldName}' for a resume:
 User Input: ${JSON.stringify(userInput)}
 Return only JSON: {"${fieldName}": "Enhanced text"}
       `;
-      const result = await model.generateContent([prompt]);
+      const result = await geminiModel.generateContent([prompt]);
       const responseText = result.response.text().trim().replace(/```json|```/g, "");
       const parsedResponse = JSON.parse(responseText);
       if (parsedResponse[fieldName]) return parsedResponse[fieldName];
@@ -105,38 +108,131 @@ const enhanceProjects = async (projectsArray) => {
 
 
 
-
 const enhanceField = async (req, res) => {
   try {
     const { resumeId, field } = req.body;
     if (!resumeId || !field) return res.status(400).json({ message: "Resume ID and field are required" });
 
-    const resume = await Temp13Resume.findById(resumeId); // Update to Temp5Resume
+    const resume = await Temp13Resume.findById(resumeId); // Update to Temp13Resume
     if (!resume) return res.status(404).json({ message: "Resume not found" });
 
     if (field === "summary") {
-      resume.resumeData.summary = await GeminiFunctionField("summary", "summary", resume.resumeData.summary || "");
-       console.log("🧠 Enhanced Summary:", resume.resumeData.summary);
+      resume.summary = await GeminiFunctionField("summary", "summary", resume.summary || "");
+      console.log("🧠 Enhanced Summary:", resume.resumeData.summary);
     } else if (field === "experience") {
-      resume.resumeData.experience = await enhanceExperience(resume.resumeData.experience);
-      console.log("🧠 Enhanced Experience:", resume.resumeData.experience);
+      resume.experience = await enhanceExperience(resume.experience);
     } else if (field === "achievements") {
-      resume.resumeData.achievements = await enhanceAchievements(resume.resumeData.achievements);
-      console.log("🧠 Enhanced Achievements:", resume.resumeData.achievements);
+      resume.achievements = await enhanceAchievements(resume.achievements);
     } else if (field === "projects") {
-      resume.resumeData.projects = await enhanceProjects(resume.resumeData.projects);
+      resume.projects = await enhanceProjects(resume.projects);
     } else {
       return res.status(400).json({ message: `Field '${field}' not supported` });
     }
 
     const updatedResume = await resume.save();
     res.json({ message: `Field ${field} enhanced successfully`, data: updatedResume });
-
   } catch (error) {
     console.error("Error enhancing field:", error);
     res.status(500).json({ message: "Error enhancing field", error: error.message });
   }
 };
+
+
+
+
+
+
+
+// const GeminiFunctionField = async (category, fieldName, userInput, retries = 3) => {
+//   while (retries > 0) {
+//     try {
+//       const prompt = `
+// Enhance this ${category} field '${fieldName}' for a resume:
+// - Keep it ATS-optimized with industry keywords.
+// - Use clear, concise, professional language.
+// - Include strong action verbs and quantifiable results where applicable.
+// User Input: ${JSON.stringify(userInput)}
+// Return only JSON: {"${fieldName}": "Enhanced text"}
+//       `;
+//       const result = await model.generateContent([prompt]);
+//       const responseText = result.response.text().trim().replace(/```json|```/g, "");
+//       const parsedResponse = JSON.parse(responseText);
+//       if (parsedResponse[fieldName]) return parsedResponse[fieldName];
+//       return userInput;
+//     } catch (error) {
+//       console.error(`Error enhancing ${category} field '${fieldName}':`, error.message);
+//       retries--;
+//       await new Promise((resolve) => setTimeout(resolve, 7000));
+//     }
+//   }
+//   return userInput;
+// };
+
+// // Helper: Enhance array-based sections
+// const enhanceExperience = async (experienceArray) => {
+//   if (!Array.isArray(experienceArray)) return experienceArray;
+//   return Promise.all(
+//     experienceArray.map(async (exp) => ({
+//       ...exp,
+//       description: await GeminiFunctionField("experience", "description", exp.description),
+//     }))
+//   );
+// };
+
+// const enhanceAchievements = async (achievementsArray) => {
+//   if (!Array.isArray(achievementsArray)) return achievementsArray;
+//   return Promise.all(
+//     achievementsArray.map(async (ach) => ({
+//       ...ach,
+//       description: await GeminiFunctionField("achievements", "description", ach.description),
+//     }))
+//   );
+// };
+
+// const enhanceProjects = async (projectsArray) => {
+//   if (!Array.isArray(projectsArray)) return projectsArray;
+//   return Promise.all(
+//     projectsArray.map(async (proj) => ({
+//       ...proj,
+//       description: await GeminiFunctionField("projects", "description", proj.description),
+//     }))
+//   );
+// };
+
+
+
+
+// const enhanceField = async (req, res) => {
+//   try {
+//     const { resumeId, field } = req.body;
+//     if (!resumeId || !field) return res.status(400).json({ message: "Resume ID and field are required" });
+
+//     const resume = await Temp13Resume.findById(resumeId); // Update to Temp5Resume
+//     if (!resume) return res.status(404).json({ message: "Resume not found" });
+
+//     if (field === "summary") {
+//       resume.resumeData.summary = await GeminiFunctionField("summary", "summary", resume.resumeData.summary || "");
+//        console.log("🧠 Enhanced Summary:", resume.resumeData.summary);
+//     } else if (field === "experience") {
+//       resume.resumeData.experience = await enhanceExperience(resume.resumeData.experience);
+//       console.log("🧠 Enhanced Experience:", resume.resumeData.experience);
+//     } else if (field === "achievements") {
+//       resume.resumeData.achievements = await enhanceAchievements(resume.resumeData.achievements);
+//       console.log("🧠 Enhanced Achievements:", resume.resumeData.achievements);
+//     } else if (field === "projects") {
+//       resume.resumeData.projects = await enhanceProjects(resume.resumeData.projects);
+//     } else {
+//       return res.status(400).json({ message: `Field '${field}' not supported` });
+//     }
+
+//     const updatedResume = await resume.save();
+//     res.json({ message: `Field ${field} enhanced successfully`, data: updatedResume });
+
+//   } catch (error) {
+//     console.error("Error enhancing field:", error);
+//     res.status(500).json({ message: "Error enhancing field", error: error.message });
+//   }
+// };
 
 
 
@@ -197,6 +293,8 @@ const parseResumeWithAI = async (text) => {
   const responseText = result.response.text().trim();
   return JSON.parse(responseText.replace(/json|```/g, '').trim());
 };
+
+
 
 const uploadResume = async (req, res) => {
   try {
